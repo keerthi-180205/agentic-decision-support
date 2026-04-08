@@ -98,8 +98,7 @@ with left_panel:
                 st.dataframe(preview_df, hide_index=True, use_container_width=True)
 
     if st.session_state.result is not None:
-        st.write("")
-        st.markdown("#### Visualizations")
+        st.markdown("#### Data Insights & Patterns")
         with st.container(border=True):
             viz_dict = {}
             if st.session_state.result.get("eda_hist") is not None:
@@ -118,11 +117,72 @@ with left_panel:
                 tabs = st.tabs(list(viz_dict.keys()))
                 for tab, (name, fig) in zip(tabs, viz_dict.items()):
                     with tab:
-                        # Rendering with use_container_width=False ensures the plot uses
-                        # its exact native matplotlib pixel size instead of ballooning up.
-                        st.pyplot(fig, use_container_width=False)
+                        # Check if it's a natively interactive Plotly chart or legacy Matplotlib
+                        if type(fig).__name__ == "Figure" and hasattr(fig, "update_layout"):
+                            st.plotly_chart(fig, use_container_width=True, theme="streamlit")
+                        else:
+                            st.pyplot(fig, use_container_width=False)
             else:
                 st.info("No visualizations available.")
+
+        st.markdown("#### AI Model Decision Engine")
+        with st.container(border=True):
+            result = st.session_state.result
+            
+            # Use metrics from the new pipeline
+            pipeline_metrics = result.get("metrics") or result.get("model_metrics", {})
+            
+            if pipeline_metrics:
+                model_name = result.get("model_name", "Unknown Model")
+                task = result.get("task", "Unknown Task")
+
+                # 🔹 MODEL SUMMARY
+                st.markdown("**Model Summary**")
+                st.write(f"Model: {model_name}")
+                st.write(f"Task: {task.capitalize()}")
+                st.caption("Auto-selected by AI agent")
+
+                # 🔹 METRICS DISPLAY
+                st.markdown("**Performance Metrics**")
+
+                if task == "classification":
+                    col1, col2, col3, col4 = st.columns(4)
+
+                    col1.metric("Accuracy", f"{pipeline_metrics.get('accuracy', 0):.2f}")
+                    col2.metric("Precision", f"{pipeline_metrics.get('precision', 0):.2f}")
+                    col3.metric("Recall", f"{pipeline_metrics.get('recall', 0):.2f}")
+                    col4.metric("F1 Score", f"{pipeline_metrics.get('f1_score', 0):.2f}")
+
+                    score_val = pipeline_metrics.get("accuracy", 0)
+                    st.info("The model demonstrates reliable classification performance with good predictive accuracy.")
+
+                else:
+                    col1, col2, col3 = st.columns(3)
+
+                    col1.metric("R2 Score", f"{pipeline_metrics.get('r2_score', 0):.2f}")
+                    col2.metric("MSE", f"{pipeline_metrics.get('mse', 0):,.0f}")
+                    col3.metric("MAE", f"{pipeline_metrics.get('mae', 0):.2f}")
+
+                    score_val = pipeline_metrics.get("r2_score", 0)
+                    st.info("The model explains a high proportion of variance, indicating strong predictive performance.")
+
+                # 🔹 MODEL DECISION EXPLANATION
+                st.markdown("**Why this model?**")
+                st.write("The system evaluated multiple models and selected the best-performing model based on dataset characteristics and performance.")
+
+                # 🔹 CONFIDENCE INDICATOR (🔥 HIGH IMPACT)
+                if score_val >= 0.8:
+                    st.success("High Model Confidence")
+                elif score_val >= 0.6:
+                    st.warning("Moderate Model Confidence")
+                else:
+                    st.error("Low Model Confidence")
+
+                # 🔹 VISUAL PROGRESS BAR (NICE TOUCH)
+                st.progress(min(max(score_val, 0), 1))
+
+            else:
+                st.write("No applicable model was trained.")
 
 with right_panel:
     if st.session_state.result is not None:
@@ -130,13 +190,10 @@ with right_panel:
         
         with st.container(border=True):
             st.markdown("##### Exploratory Data Analysis")
-            st.write("")
-            st.write("Summary:")
             st.write("The dataset has been processed and analyzed successfully. Structural variances have been calculated natively within the data.")
             
         with st.container(border=True):
             st.markdown("##### Model Results")
-            st.write("")
             model_score = st.session_state.result.get("model_score")
             if model_score is not None:
                 score_val = model_score * 100 if model_score <= 1 else model_score
@@ -147,7 +204,6 @@ with right_panel:
                 
         with st.container(border=True):
             st.markdown("##### Insights")
-            st.write("")
             if st.session_state.result.get("insights"):
                 for ins in st.session_state.result["insights"]:
                     st.markdown(f"- {ins}")

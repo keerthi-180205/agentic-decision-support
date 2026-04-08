@@ -22,7 +22,7 @@ def generate_insights(df, model):
                 score = importances[i]
                 if score > 0:
                     insights.append(
-                        f"Feature '{feature_names[i]}' strongly influences '{target_name}' (importance: {score:.2f})"
+                        f"Feature '{feature_names[i]}' appears to be one of the strongest drivers influencing the outcome (importance: {score:.2f})."
                     )
     else:
         X_numeric = X.select_dtypes(include='number')
@@ -43,9 +43,9 @@ def generate_insights(df, model):
             for feature in top_features:
                 c = correlations[feature]
                 if pd.notna(c) and abs(c) >= 0.3:
-                    direction = "positively" if c > 0 else "negatively"
+                    direction = "higher" if c > 0 else "lower"
                     insights.append(
-                        f"Feature '{feature}' {direction} influences '{target_name}' (correlation: {c:.2f})"
+                        f"An increase in '{feature}' is associated with a {direction} value of the target variable (correlation: {c:.2f})."
                     )
 
     if not insights:

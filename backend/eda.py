@@ -1,7 +1,8 @@
 import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
 import numpy as np
+import plotly.express as px
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
 # -------------------------------
 # 1. BASIC INFO
@@ -32,54 +33,56 @@ def get_clean_numeric_df(df):
     # Remove ID-like columns
     numeric_df = numeric_df.loc[:, ~numeric_df.columns.str.contains("id|ID|Id", case=False)]
 
-    # 🚨 RELAX THIS: keep columns with some variation
+    # RELAX THIS: keep columns with some variation
     numeric_df = numeric_df.loc[:, numeric_df.nunique() > 2]
 
-    # 🚨 FALLBACK: if nothing left, use original numeric columns
+    # FALLBACK: if nothing left, use original numeric columns
     if numeric_df.shape[1] == 0:
         numeric_df = df.select_dtypes(include='number')
 
-    # Limit columns (for UI)
+    # Limit columns (for UI speed)
     if numeric_df.shape[1] > 6:
         numeric_df = numeric_df.iloc[:, :6]
 
     return numeric_df
 
 # -------------------------------
+# UI THEME CONFIGURATION
+# -------------------------------
+def configure_layout(fig):
+    fig.update_layout(
+        paper_bgcolor="#111827",
+        plot_bgcolor="#111827",
+        font_color="#E5E7EB",
+        margin=dict(l=20, r=20, t=50, b=20),
+        hovermode="closest"
+    )
+    fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor="#374151", zerolinecolor="#374151")
+    fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor="#374151", zerolinecolor="#374151")
+    return fig
+
+# -------------------------------
 # 2. HISTOGRAMS
 # -------------------------------
 def plot_histograms(df):
     numeric_df = get_clean_numeric_df(df)
-
     if numeric_df.shape[1] == 0:
         return None
 
-    cols = numeric_df.columns
-
+    cols = numeric_df.columns[:6].tolist()
     n_cols = len(cols)
-    n_grid_cols = min(n_cols, 3)
+    n_grid_cols = min(n_cols, 2)
     n_rows = int(np.ceil(n_cols / n_grid_cols))
 
-    fig, axes = plt.subplots(n_rows, n_grid_cols, figsize=(n_grid_cols * 5, n_rows * 4))
-
-    if n_cols == 1:
-        axes = [axes]
-    else:
-        axes = axes.flatten()
+    fig = make_subplots(rows=n_rows, cols=n_grid_cols, subplot_titles=cols)
 
     for idx, col in enumerate(cols):
-        sns.histplot(numeric_df[col].dropna(), kde=True, ax=axes[idx])
+        r = (idx // n_grid_cols) + 1
+        c = (idx % n_grid_cols) + 1
+        fig.add_trace(go.Histogram(x=numeric_df[col].dropna(), name=col, marker_color="#6366F1", opacity=0.8), row=r, col=c)
 
-        # Clean title
-        clean_name = str(col)[:25]
-        axes[idx].set_title(clean_name)
-
-    # Remove empty plots
-    for idx in range(n_cols, len(axes)):
-        fig.delaxes(axes[idx])
-
-    plt.tight_layout()
-    return fig
+    fig.update_layout(title="Distributions & Frequencies", showlegend=False, height=max(400, 250 * n_rows))
+    return configure_layout(fig)
 
 # -------------------------------
 # 3. CORRELATION HEATMAP
@@ -87,29 +90,23 @@ def plot_histograms(df):
 def plot_correlation(df):
     numeric_df = get_clean_numeric_df(df)
 
-    # Need at least 2 features
     if numeric_df.shape[1] < 2:
         return None
 
-    # Skip meaningless correlation (too unique data)
     if numeric_df.nunique().mean() > 0.8 * len(df):
         return None
 
-    corr = numeric_df.corr()
-
-    # Clean NaN rows/cols
-    corr = corr.dropna(axis=0, how='all').dropna(axis=1, how='all')
+    corr = numeric_df.corr().dropna(axis=0, how='all').dropna(axis=1, how='all')
 
     if corr.shape[0] < 2:
         return None
 
-    fig, ax = plt.subplots(figsize=(8, 6))
-    sns.heatmap(corr, annot=False, cmap='coolwarm', ax=ax)
-
-    ax.set_title("Correlation Heatmap")
-    plt.tight_layout()
-
-    return fig
+    fig = go.Figure(data=go.Heatmap(
+        z=corr.values, x=corr.columns, y=corr.index,
+        colorscale='RdBu', zmin=-1, zmax=1
+    ))
+    fig.update_layout(title="Correlation Matrix", height=500)
+    return configure_layout(fig)
 
 # -------------------------------
 # 4. SCATTER PLOT
@@ -122,11 +119,9 @@ def plot_scatter(df):
 
     x_col, y_col = numeric_df.columns[0], numeric_df.columns[1]
 
-    fig, ax = plt.subplots(figsize=(5, 4))
-    sns.scatterplot(data=numeric_df, x=x_col, y=y_col, ax=ax, alpha=0.6)
-    ax.set_title(f"{x_col} vs {y_col}")
-    plt.tight_layout()
-    return fig
+    fig = px.scatter(numeric_df, x=x_col, y=y_col, opacity=0.7, color_discrete_sequence=["#8B5CF6"])
+    fig.update_layout(title=f"Relationship Profile: {x_col} vs {y_col}", height=450)
+    return configure_layout(fig)
 
 # -------------------------------
 # 5. PAIRPLOT
@@ -138,10 +133,10 @@ def plot_pairplot(df):
         return None
 
     cols = numeric_df.columns[:4].tolist()
-    # Reduce height of each subplot to make it more compact
-    pair_fig = sns.pairplot(numeric_df[cols].dropna(), height=1.5, aspect=1.2)
-    plt.tight_layout()
-    return pair_fig.fig
+    fig = px.scatter_matrix(numeric_df, dimensions=cols, color_discrete_sequence=["#6366F1"], opacity=0.6)
+    fig.update_traces(diagonal_visible=False)
+    fig.update_layout(title="Multivariate Interaction Matrix", height=600)
+    return configure_layout(fig)
 
 # -------------------------------
 # 6. BOXPLOT
@@ -152,19 +147,17 @@ def plot_boxplot(df):
     if numeric_df.shape[1] == 0:
         return None
 
-    width = min(8, max(5, numeric_df.shape[1] * 1.0))
-    fig, ax = plt.subplots(figsize=(width, 4))
-    sns.boxplot(data=numeric_df, ax=ax)
-    ax.set_title("Boxplot — Distribution & Outliers")
-    plt.xticks(rotation=45, ha='right')
-    plt.tight_layout()
-    return fig
+    fig = go.Figure()
+    for col in numeric_df.columns[:8]:
+        fig.add_trace(go.Box(y=numeric_df[col].dropna(), name=col, marker_color="#8B5CF6"))
+
+    fig.update_layout(title="Outlier Detection & Ranges", showlegend=False, height=450)
+    return configure_layout(fig)
 
 # -------------------------------
 # 7. BAR PLOT (CATEGORICAL)
 # -------------------------------
 def plot_barplot(df):
-    # Try to find categorical columns first, then fallback to low cardinality numerics
     cat_df = df.select_dtypes(include=['object', 'category'])
     if cat_df.shape[1] == 0:
         cat_df = df.loc[:, df.nunique() <= 10]
@@ -172,34 +165,12 @@ def plot_barplot(df):
     if cat_df.shape[1] == 0:
         return None
         
-    cols = cat_df.columns[:4].tolist() # Limit to first 4 categorical features
-    if len(cols) == 0:
-        return None
-
-    n_cols = len(cols)
-    n_grid_cols = min(n_cols, 2)
-    n_rows = int(np.ceil(n_cols / n_grid_cols))
-
-    fig, axes = plt.subplots(n_rows, n_grid_cols, figsize=(n_grid_cols * 5, n_rows * 4))
-
-    if n_cols == 1:
-        axes = [axes]
-    else:
-        axes = axes.flatten()
+    cols = cat_df.columns[:2].tolist()
+    fig = make_subplots(rows=1, cols=len(cols), subplot_titles=cols)
 
     for idx, col in enumerate(cols):
-        val_counts = df[col].value_counts().nlargest(10) # Top 10 categories
-        
-        # Use a single color for seaborn 0.13+ or standard hue config
-        sns.barplot(x=val_counts.index, y=val_counts.values, ax=axes[idx], color='steelblue')
-        
-        clean_name = str(col)[:25]
-        axes[idx].set_title(f"{clean_name} (Top 10)")
-        axes[idx].tick_params(axis='x', rotation=45)
+        val_counts = df[col].value_counts().nlargest(10)
+        fig.add_trace(go.Bar(x=val_counts.index, y=val_counts.values, marker_color="#3B82F6", name=col), row=1, col=idx+1)
 
-    # Remove empty subplots
-    for idx in range(n_cols, len(axes)):
-        fig.delaxes(axes[idx])
-
-    plt.tight_layout()
-    return fig
+    fig.update_layout(title="Highest Frequency Categories", showlegend=False, height=400)
+    return configure_layout(fig)

@@ -85,6 +85,7 @@ def scale_features(df):
 
 def preprocess_data(df):
     df = df.copy()
+    df = df.loc[:, ~df.columns.str.contains("^Unnamed")]
     df = handle_missing_values(df)
     df = encode_categorical(df)
     df = scale_features(df)

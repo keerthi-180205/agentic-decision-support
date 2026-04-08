@@ -1,6 +1,6 @@
 from backend.preprocess import preprocess_data
 from backend.eda import plot_histograms, plot_correlation, show_basic_info, plot_barplot, plot_boxplot, plot_scatter, plot_pairplot
-from backend.model import train_and_select_model
+from backend.model import train_and_select_model, run_full_model_pipeline
 from backend.insights import generate_insights
 from agent.interpreter import interpret_query
 from agent.planner import decide_plan
@@ -26,6 +26,10 @@ def run_agentic_pipeline(df, query=""):
     fig_pair = None
     score = None
     insights = []
+    
+    metrics = {}
+    model_name = ""
+    task_type = ""
 
     if workflow == "eda_only":
         fig_hist = plot_histograms(clean_data)
@@ -47,6 +51,12 @@ def run_agentic_pipeline(df, query=""):
 
         if model is not None:
             insights = generate_insights(clean_data, model)
+            
+        full_result = run_full_model_pipeline(clean_data)
+        if full_result:
+            metrics = full_result.get("metrics", {})
+            model_name = full_result.get("model_name", "")
+            task_type = full_result.get("task", "")
 
         fig_hist = plot_histograms(clean_data)
         fig_corr = plot_correlation(clean_data)
@@ -65,5 +75,8 @@ def run_agentic_pipeline(df, query=""):
         "eda_scatter": fig_scatter,
         "eda_pair": fig_pair,
         "model_score": score,
-        "insights": insights
+        "insights": insights,
+        "metrics": metrics,
+        "model_name": model_name,
+        "task": task_type
     }
