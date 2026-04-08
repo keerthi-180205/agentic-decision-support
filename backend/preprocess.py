@@ -1,17 +1,27 @@
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
 
-
 def handle_missing_values(df):
-    """
-    Fill missing values:
-    - Numerical columns → fill with mean
-    - Categorical columns → fill with mode
-    """
     df = df.copy()
 
-    # Drop completely empty columns just in case
+    # Drop completely empty columns
     df = df.dropna(axis=1, how='all')
+
+    # Safely flatten complex objects (lists, dicts) from JSON into strings
+    for col in df.select_dtypes(include=['object']).columns:
+        df[col] = df[col].apply(lambda x: str(x) if isinstance(x, (list, dict, tuple)) else x)
+
+    # Convert boolean to numeric: True -> 1, False -> 0
+    bool_cols = df.select_dtypes(include='bool').columns
+    if len(bool_cols) > 0:
+        df[bool_cols] = df[bool_cols].astype(int)
+
+    # Convert numeric-like strings safely
+    for col in df.columns:
+        try:
+            df[col] = pd.to_numeric(df[col])
+        except (ValueError, TypeError):
+            pass
 
     # Fill numerical columns with mean
     num_cols = df.select_dtypes(include='number').columns
@@ -31,58 +41,48 @@ def handle_missing_values(df):
 
 
 def encode_categorical(df):
-    """
-    One-hot encode all categorical (object) columns.
-    Uses drop_first=True to avoid multicollinearity.
-    """
     df = df.copy()
 
+    # Detect categorical columns (object dtype)
     cat_cols = df.select_dtypes(include='object').columns.tolist()
 
     if len(cat_cols) > 0:
+        # Apply one-hot encoding
         df = pd.get_dummies(df, columns=cat_cols, drop_first=True)
 
     return df
 
 
 def scale_features(df):
-    """
-    Scale only numerical feature columns using StandardScaler.
-    The last column is treated as the target and is excluded from scaling.
-    Handles the case where there are no numerical feature columns safely.
-    """
     df = df.copy()
 
-    # Separate target (last column) from features
-    target = df.columns[-1]
-    X = df.drop(columns=[target])
-    y = df[target]
+    # Ensure there's a target column to separate
+    if len(df.columns) < 2:
+        return df
 
-    # Identify numeric feature columns only (not the target)
+    # Treat last column as target
+    target_col = df.columns[-1]
+    
+    # Separate X and y
+    X = df.drop(columns=[target_col])
+    y = df[[target_col]]
+
+    # Scale only numeric columns in X using StandardScaler
     num_cols = X.select_dtypes(include='number').columns.tolist()
-
     if len(num_cols) > 0:
         scaler = StandardScaler()
         X[num_cols] = scaler.fit_transform(X[num_cols])
 
-    # Combine features and target back
+    # Recombine X and y
     df = pd.concat([X, y], axis=1)
 
     return df
 
 
 def preprocess_data(df):
-    """
-    Master preprocessing pipeline.
-    Calls all steps in order:
-      1. Handle missing values
-      2. Encode categorical columns
-      3. Scale numerical feature columns (excludes target)
-
-    Returns the fully cleaned and preprocessed DataFrame.
-    """
     df = df.copy()
 
+    # Call functions in order
     df = handle_missing_values(df)
     df = encode_categorical(df)
     df = scale_features(df)

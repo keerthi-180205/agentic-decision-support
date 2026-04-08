@@ -1,0 +1,32 @@
+[
+    {
+        "age": 25,
+        "salary": 50000,
+        "experience": 2,
+        "purchased": 0
+    },
+    {
+        "age": 30,
+        "salary": 60000,
+        "experience": 5,
+        "purchased": 1
+    },
+    {
+        "age": 22,
+        "salary": 45000,
+        "experience": 1,
+        "purchased": 0
+    },
+    {
+        "age": 35,
+        "salary": 80000,
+        "experience": 10,
+        "purchased": 1
+    },
+    {
+        "age": 28,
+        "salary": 52000,
+        "experience": 3,
+        "purchased": 0
+    }
+]
