@@ -1,0 +1,11 @@
+# ── Core Data & ML ──────────────────────────────────────────
+pandas==2.3.3           # DataFrame operations (preprocess.py, eda.py, insights.py)
+numpy==2.4.2            # Numerical computations (insights.py)
+scikit-learn==1.8.0     # ML models: LogisticRegression, RandomForest, etc. (model.py)
+
+# ── Visualization ────────────────────────────────────────────
+matplotlib==3.10.8      # Plotting charts and graphs (eda.py)
+seaborn==0.13.2         # Statistical visualizations (eda.py)
+
+# ── Web App ──────────────────────────────────────────────────
+streamlit==1.54.0       # Interactive UI for the app (app.py)
