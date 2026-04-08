@@ -9,3 +9,4 @@ seaborn==0.13.2         # Statistical visualizations (eda.py)
 
 # ── Web App ──────────────────────────────────────────────────
 streamlit==1.54.0       # Interactive UI for the app (app.py)
+openpyxl                # Excel file support (app.py)

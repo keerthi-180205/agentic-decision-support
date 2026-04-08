@@ -13,17 +13,36 @@ st.set_page_config(page_title="Automated Data Analysis Application", layout="wid
 st.title("🚀 Data Analysis & Insights Pipeline")
 st.markdown("Upload your dataset to automatically preprocess it, perform EDA, build a model, and generate insights.")
 
-# 1. File uploader (CSV)
-uploaded_file = st.file_uploader("Upload your dataset (CSV)", type=["csv"])
+# 1. File uploader (CSV, Excel, JSON)
+uploaded_file = st.file_uploader("Upload your dataset (CSV, Excel, JSON)", type=["csv", "xlsx", "xls", "json"])
 
 if uploaded_file is not None:
-    # Read the dataset
-    df = load_file(uploaded_file)
+    # Read the dataset based on file extension
+    file_name = uploaded_file.name
     
-    if df is None:
-        st.error("Error: Failed to process the uploaded file. Please verify the format.")
+    try:
+        if file_name.endswith(".csv"):
+            df = pd.read_csv(uploaded_file)
+        elif file_name.endswith((".xlsx", ".xls")):
+            df = pd.read_excel(uploaded_file)
+        elif file_name.endswith(".json"):
+            df = pd.read_json(uploaded_file)
+        else:
+            st.error("Unsupported file format!")
+            st.stop()
+            
+        # Clean up empty columns (like Unnamed: 2) from Excel
+        df = df.dropna(axis=1, how='all')
+        
+        # Safely fix PyArrow mixed-type crashes by setting non-NaN objects to strings
+        for col in df.select_dtypes(include='object').columns:
+            mask = df[col].notna()
+            df.loc[mask, col] = df.loc[mask, col].astype(str)
+            
+    except Exception as e:
+        st.error(f"Error loading file: {e}")
         st.stop()
-    
+        
     # 2. Show dataset preview
     st.subheader("Dataset Preview")
     st.dataframe(df.head())

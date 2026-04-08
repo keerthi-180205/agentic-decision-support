@@ -10,6 +10,9 @@ def handle_missing_values(df):
     """
     df = df.copy()
 
+    # Drop completely empty columns just in case
+    df = df.dropna(axis=1, how='all')
+
     # Fill numerical columns with mean
     num_cols = df.select_dtypes(include='number').columns
     for col in num_cols:
@@ -18,8 +21,11 @@ def handle_missing_values(df):
     # Fill categorical columns with mode
     cat_cols = df.select_dtypes(include='object').columns
     for col in cat_cols:
-        if not df[col].empty:
-            df[col] = df[col].fillna(df[col].mode()[0])
+        modes = df[col].mode()
+        if len(modes) > 0:
+            df[col] = df[col].fillna(modes[0])
+        else:
+            df[col] = df[col].fillna("Unknown")
 
     return df
 

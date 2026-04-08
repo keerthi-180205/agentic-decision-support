@@ -1,64 +1,66 @@
 import numpy as np
-
+import pandas as pd
 
 def generate_insights(df, model):
     """
-    Generate human-readable insights from the trained model.
-    Assumes the last column of df is the target variable.
-    Returns: list of insight strings
+    Generate simple insights and suggestions based on feature importance or correlation.
     """
-    insights = []
+    if model is None or len(df.columns) < 2:
+        return ["Not enough data to extract insights."]
 
-    # Last column is target, all others are features
+    insights = []
+    
+    # Last column is target
     feature_names = list(df.columns[:-1])
     target_name = df.columns[-1]
 
-    X = df.iloc[:, :-1] 
+    X = df.iloc[:, :-1]
     y = df.iloc[:, -1]
 
-    # --- Feature Importance (for tree-based models like RandomForest) ---
+    # Use feature importance if available (e.g. tree-based models)
     if hasattr(model, "feature_importances_"):
         importances = model.feature_importances_
-        top_indices = np.argsort(importances)[-3:]  # top 3 features by importance
-
-        for i in reversed(top_indices):  # highest importance first
-            insights.append(
-                f"Feature '{feature_names[i]}' strongly influences the target '{target_name}' "
-                f"(importance: {importances[i]:.2f})"
-            )
-
-        low_indices = [i for i in range(len(feature_names)) if i not in top_indices]
-        if low_indices:
-            low_features = ", ".join([feature_names[i] for i in low_indices])
-            insights.append(f"Features with low impact on '{target_name}': {low_features}")
-
-    # --- Correlation with target (for all models) ---
+        if len(importances) == len(feature_names):
+            # Top 3 features
+            top_indices = np.argsort(importances)[-3:]
+            for i in reversed(top_indices):
+                score = importances[i]
+                if score > 0:
+                    insights.append(
+                        f"Feature '{feature_names[i]}' strongly influences '{target_name}' (importance: {score:.2f})"
+                    )
     else:
-        # Fix 3: skip constant columns to avoid NaN from corr()
-        correlations = X.apply(lambda col: col.corr(y) if col.std() != 0 else 0)
-        corr_threshold = 0.3
+        # Fallback to correlation for linear models
+        X_numeric = X.select_dtypes(include=[np.number, bool])
+        
+        # Clean target for correlation
+        if pd.api.types.is_bool_dtype(y) or y.dtype == 'object':
+            try:
+                y_numeric = y.astype('category').cat.codes
+            except:
+                y_numeric = y
+        else:
+            y_numeric = y
+            
+        if not X_numeric.empty:
+            correlations = X_numeric.apply(lambda col: col.corr(y_numeric) if col.std() != 0 else 0)
+            corr_threshold = 0.3
+            
+            # Top 3 correlated features
+            top_features = correlations.abs().nlargest(3).index
+            for feature in top_features:
+                c = correlations[feature]
+                if pd.notna(c) and abs(c) >= corr_threshold:
+                    val_type = "positively" if c > 0 else "negatively"
+                    insights.append(
+                        f"Feature '{feature}' {val_type} influences '{target_name}' (correlation: {c:.2f})"
+                    )
 
-        # Fix 4: show only top 3 by absolute correlation
-        top_features = correlations.abs().nlargest(3).index
-        for feature in top_features:
-            corr = correlations[feature]
-            if abs(corr) >= corr_threshold:
-                insights.append(
-                    f"Feature '{feature}' strongly influences the target '{target_name}' "
-                    f"(correlation: {corr:.2f})"
-                )
-            else:
-                insights.append(
-                    f"Feature '{feature}' has low impact on the target '{target_name}' "
-                    f"(correlation: {corr:.2f})"
-                )
+    if not insights:
+        insights.append(f"No strongly influential features found for predicting '{target_name}'.")
 
-    # --- Decision Suggestions ---
-    insights.append(
-        "Decision Suggestion: Focus on the top influential features to improve model performance and decision quality."
-    )
-    insights.append(
-        "Decision Suggestion: Consider removing low-impact features to simplify the model and reduce noise."
-    )
+    # simple insights + suggestions
+    insights.append("Suggestion: Focus on the top influential features identified above.")
+    insights.append("Suggestion: Consider removing low-impact features to improve model efficiency.")
 
     return insights
