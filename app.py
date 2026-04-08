@@ -58,10 +58,30 @@ if uploaded_file is not None:
             st.write("**Summary Statistics:**")
             st.dataframe(info["summary"].T, use_container_width=True)
 
-        # 3. Histograms
+        # 3. Univariate Analysis
+        st.subheader("📊 3. Univariate Analysis")
         if result.get("eda_hist") is not None:
-            st.subheader("📊 3. Histograms")
-            st.pyplot(result["eda_hist"], use_container_width=True)
+            st.markdown("**Histogram (Distribution)**")
+            st.pyplot(result["eda_hist"], use_container_width=False)
+            
+        if result.get("eda_box") is not None:
+            st.markdown("**Box Plot (Outliers)**")
+            st.pyplot(result["eda_box"], use_container_width=False)
+            
+        if result.get("eda_bar") is not None:
+            st.markdown("**Bar Plot (Categorical)**")
+            st.pyplot(result["eda_bar"], use_container_width=False)
+            
+        # 4. Multivariate Analysis
+        st.subheader("🔗 4. Multivariate Analysis")
+        if result.get("eda_scatter") is not None:
+            st.markdown("**Scatter Plot (Relationship)**")
+            st.pyplot(result["eda_scatter"], use_container_width=False)
+            
+        if result.get("eda_pair") is not None:
+            st.markdown("**Pair Plot (Multi-variable Relationships)**")
+            st.pyplot(result["eda_pair"], use_container_width=False)
+
 
         # 4. Model Performance
         score = result.get("model_score")

@@ -44,6 +44,14 @@ def encode_categorical(df):
     y = df[[target_col]]
 
     cat_cols = X.select_dtypes(include='object').columns.tolist()
+    
+    # Filter out high-cardinality columns (like ID, Names) to prevent MemoryError
+    cat_cols = [col for col in cat_cols if X[col].nunique() <= 20]
+    
+    # Drop the high-cardinality columns that we aren't encoding (since they will break models)
+    high_card_cols = [c for c in X.select_dtypes(include='object').columns.tolist() if c not in cat_cols]
+    X = X.drop(columns=high_card_cols)
+
     if len(cat_cols) > 0:
         X = pd.get_dummies(X, columns=cat_cols, drop_first=True)
 
