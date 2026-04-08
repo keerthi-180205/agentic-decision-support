@@ -1,0 +1,65 @@
+import streamlit as st
+import pandas as pd
+
+# Import logic from other files (to be implemented by teammates)
+from preprocess import preprocess_data
+from eda import plot_histograms
+from model import train_and_select_model
+from insights import generate_insights
+
+st.set_page_config(page_title="Automated Data Analysis Application", layout="wide", page_icon="🚀")
+
+st.title("🚀 Data Analysis & Insights Pipeline")
+st.markdown("Upload your dataset to automatically preprocess it, perform EDA, build a model, and generate insights.")
+
+# 1. File uploader (CSV)
+uploaded_file = st.file_uploader("Upload your dataset (CSV)", type=["csv"])
+
+if uploaded_file is not None:
+    # Read the dataset
+    df = pd.read_csv(uploaded_file)
+    
+    # 2. Show dataset preview
+    st.subheader("Dataset Preview")
+    st.dataframe(df.head())
+    
+    # 3. Button: "Run Analysis"
+    if st.button("Run Analysis", use_container_width=True, type="primary"):
+        st.markdown("---")
+        
+        # Step A: Preprocess Data
+        st.subheader("🧹 1. Cleaned Data")
+        with st.spinner("Preprocessing data (handling missing values, encoding, etc.)..."):
+            df_clean = preprocess_data(df)
+            st.dataframe(df_clean.head())
+        
+        # Step B: Exploratory Data Analysis (EDA)
+        st.subheader("📊 2. Exploratory Data Analysis")
+        with st.spinner("Generating plots and visualizing distributions..."):
+            fig = plot_histograms(df_clean)
+            if fig:
+                st.pyplot(fig)
+            else:
+                st.info("No plot could be generated.")
+                
+        # Step C: Data Splitting (Last column assumes target)
+        target = df_clean.columns[-1]
+        X = df_clean.drop(columns=[target])
+        y = df_clean[target]
+        
+        # Step D: Train and Select Model
+        st.subheader("🤖 3. Model Performance")
+        with st.spinner(f"Training models to predict '{target}'..."):
+            model, score = train_and_select_model(X, y)
+            st.success("Model trained successfully!")
+            st.metric(label=f"Best Model Score (Predicting: {target})", value=f"{score:.4f}")
+            
+        # Step E: Generate Business Insights
+        st.subheader("💡 4. Actionable Insights")
+        with st.spinner("Extracting insights based on the trained model and data..."):
+            insights = generate_insights(df_clean, model)
+            if insights and isinstance(insights, list):
+                for ins in insights:
+                    st.write(f"- {ins}")
+            else:
+                st.info("No specific insights could be generated.")
