@@ -3,23 +3,16 @@ from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.model_selection import train_test_split
 
 def detect_problem_type(y):
-    """
-    Detect whether the problem is classification or regression.
-    """
     if y.dtype == "object" or y.nunique() < 10:
         return "classification"
     return "regression"
 
 def train_and_select_model(X, y):
-    """
-    Train multiple models based on problem type and return the best one + score.
-    """
     if len(X) == 0 or len(y) == 0:
         return None, None
 
     problem_type = detect_problem_type(y)
 
-    # Ensure robust train_test_split
     test_size = 0.2 if len(X) >= 5 else 0.5
     if len(X) > 1:
         X_train, X_test, y_train, y_test = train_test_split(
@@ -53,3 +46,12 @@ def train_and_select_model(X, y):
             continue
 
     return best_model, best_score
+
+
+def evaluate_model(model, X_test, y_test):
+    if model is None:
+        return None
+    try:
+        return model.score(X_test, y_test)
+    except Exception:
+        return None

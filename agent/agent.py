@@ -1,51 +1,53 @@
 from backend.preprocess import preprocess_data
-from backend.eda import plot_histograms
+from backend.eda import plot_histograms, plot_correlation, show_basic_info
 from backend.model import train_and_select_model
 from backend.insights import generate_insights
 from agent.interpreter import interpret_query
 from agent.planner import decide_plan
 
 def run_agentic_pipeline(df, query=""):
-    """
-    Main agent logic combining preprocessing, interpretation, and execution.
-    """
-    # 1. preprocess data
+    # 1. basic info on ORIGINAL data (readable column names)
+    basic_info = show_basic_info(df)
+
+    # 2. preprocess data
     clean_data = preprocess_data(df)
-    
-    # 2. interpret query
+
+    # 3. interpret query
     intent = interpret_query(query)
-    
-    # 3. decide plan
+
+    # 4. decide plan
     workflow = decide_plan(clean_data, intent)
-    
-    # Initialize returns
-    fig = None
+
+    fig_hist = None
+    fig_corr = None
     score = None
     insights = []
-    
-    # Execute workflow
+
     if workflow == "eda_only":
-        fig = plot_histograms(clean_data)
-        
+        fig_hist = plot_histograms(clean_data)
+        fig_corr = plot_correlation(clean_data)
+
     elif workflow == "full_pipeline":
-        # Split target (last column)
         target = clean_data.columns[-1]
         X = clean_data.drop(columns=[target])
         y = clean_data[target]
-        
-        # Run model
-        model, score = train_and_select_model(X, y)
-        
-        # Generate insights
+
+        model, best_score = train_and_select_model(X, y)
+
+        if best_score is not None and best_score != -float("inf"):
+            score = best_score
+
         if model is not None:
             insights = generate_insights(clean_data, model)
-            
-        # Run EDA
-        fig = plot_histograms(clean_data)
-        
+
+        fig_hist = plot_histograms(clean_data)
+        fig_corr = plot_correlation(clean_data)
+
     return {
         "clean_data": clean_data,
-        "eda": fig,
+        "basic_info": basic_info,
+        "eda_hist": fig_hist,
+        "eda_corr": fig_corr,
         "model_score": score,
         "insights": insights
     }
