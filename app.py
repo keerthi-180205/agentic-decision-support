@@ -57,6 +57,9 @@ if "df" not in st.session_state:
     st.session_state.df = None
 if "uploaded_name" not in st.session_state:
     st.session_state.uploaded_name = None
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = [{"role": "assistant", "content": "Hello! I am your AI Data Scientist. I have analyzed your dataset and model. What would you like to know?"}]
+
 left_panel, right_panel = st.columns([2, 1])
 
 with left_panel:
@@ -209,3 +212,44 @@ with right_panel:
                     st.markdown(f"- {ins}")
             else:
                 st.write("- No generalized insights generated.")
+                
+        # ---------------------------------------------
+        # INTERACTIVE AI DATA SCIENTIST CHAT
+        # ---------------------------------------------
+        st.write("")
+        st.markdown("#### 💬 Ask the Data Scientist")
+        with st.container(border=True, height=500):
+            # Display chat history
+            for msg in st.session_state.chat_history:
+                with st.chat_message(msg["role"]):
+                    st.markdown(msg["content"])
+                    
+        # Input bar
+        user_q = st.chat_input("Ask about the model, graphs, or insights...")
+        if user_q:
+            # Append & display user message
+            st.session_state.chat_history.append({"role": "user", "content": user_q})
+            # Trigger rerun to show user message immediately and run the spinner properly
+            st.rerun()
+
+# Execute the LLM interaction outside of chat_input's immediate event loop if needed
+# Actually, st.chat_input triggers a rerun, so we intercept the last unanswered query
+if st.session_state.get("chat_history") and st.session_state.chat_history[-1]["role"] == "user":
+    user_q = st.session_state.chat_history[-1]["content"]
+    with right_panel:
+        with st.chat_message("assistant"):
+            with st.spinner("Analyzing data context..."):
+                from utils.llm import get_data_science_response
+                res = st.session_state.result
+                df_shape = str(st.session_state.df.shape)
+                metrics = str(res.get("metrics") or res.get("model_metrics", {}))
+                model_name = res.get("model_name", "Unknown")
+                task = res.get("task", "Unknown")
+                insights = str(res.get("insights", []))
+                
+                ai_response = get_data_science_response(
+                    df_shape, model_name, task, metrics, insights, user_q
+                )
+                
+            st.session_state.chat_history.append({"role": "assistant", "content": ai_response})
+            st.rerun()
