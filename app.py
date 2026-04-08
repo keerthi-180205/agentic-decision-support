@@ -6,6 +6,7 @@ from backend.preprocess import preprocess_data
 from backend.eda import plot_histograms
 from backend.model import train_and_select_model
 from backend.insights import generate_insights
+from utils.file_handler import load_file
 
 st.set_page_config(page_title="Automated Data Analysis Application", layout="wide", page_icon="🚀")
 
@@ -17,7 +18,11 @@ uploaded_file = st.file_uploader("Upload your dataset (CSV)", type=["csv"])
 
 if uploaded_file is not None:
     # Read the dataset
-    df = pd.read_csv(uploaded_file)
+    df = load_file(uploaded_file)
+    
+    if df is None:
+        st.error("Error: Failed to process the uploaded file. Please verify the format.")
+        st.stop()
     
     # 2. Show dataset preview
     st.subheader("Dataset Preview")
