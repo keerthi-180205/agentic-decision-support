@@ -1,5 +1,5 @@
 from backend.preprocess import preprocess_data
-from backend.eda import plot_histograms, plot_correlation, show_basic_info
+from backend.eda import plot_histograms, plot_correlation, show_basic_info, plot_barplot, plot_boxplot, plot_scatter, plot_pairplot
 from backend.model import train_and_select_model
 from backend.insights import generate_insights
 from agent.interpreter import interpret_query
@@ -20,12 +20,20 @@ def run_agentic_pipeline(df, query=""):
 
     fig_hist = None
     fig_corr = None
+    fig_bar = None
+    fig_box = None
+    fig_scatter = None
+    fig_pair = None
     score = None
     insights = []
 
     if workflow == "eda_only":
         fig_hist = plot_histograms(clean_data)
         fig_corr = plot_correlation(clean_data)
+        fig_bar = plot_barplot(clean_data)
+        fig_box = plot_boxplot(clean_data)
+        fig_scatter = plot_scatter(clean_data)
+        fig_pair = plot_pairplot(clean_data)
 
     elif workflow == "full_pipeline":
         target = clean_data.columns[-1]
@@ -42,12 +50,20 @@ def run_agentic_pipeline(df, query=""):
 
         fig_hist = plot_histograms(clean_data)
         fig_corr = plot_correlation(clean_data)
+        fig_bar = plot_barplot(clean_data)
+        fig_box = plot_boxplot(clean_data)
+        fig_scatter = plot_scatter(clean_data)
+        fig_pair = plot_pairplot(clean_data)
 
     return {
         "clean_data": clean_data,
         "basic_info": basic_info,
         "eda_hist": fig_hist,
         "eda_corr": fig_corr,
+        "eda_bar": fig_bar,
+        "eda_box": fig_box,
+        "eda_scatter": fig_scatter,
+        "eda_pair": fig_pair,
         "model_score": score,
         "insights": insights
     }
