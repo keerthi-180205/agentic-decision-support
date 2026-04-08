@@ -79,7 +79,7 @@ def plot_histograms(df):
     for idx, col in enumerate(cols):
         r = (idx // n_grid_cols) + 1
         c = (idx % n_grid_cols) + 1
-        fig.add_trace(go.Histogram(x=numeric_df[col].dropna(), name=col, marker_color="#6366F1", opacity=0.8), row=r, col=c)
+        fig.add_trace(go.Histogram(x=numeric_df[col].dropna(), name=col, marker_color="#6366F1", opacity=0.8, marker_line_color="white", marker_line_width=1), row=r, col=c)
 
     fig.update_layout(title="Distributions & Frequencies", showlegend=False, height=max(400, 250 * n_rows))
     return configure_layout(fig)
@@ -120,6 +120,7 @@ def plot_scatter(df):
     x_col, y_col = numeric_df.columns[0], numeric_df.columns[1]
 
     fig = px.scatter(numeric_df, x=x_col, y=y_col, opacity=0.7, color_discrete_sequence=["#8B5CF6"])
+    fig.update_traces(marker_line_color="white", marker_line_width=1)
     fig.update_layout(title=f"Relationship Profile: {x_col} vs {y_col}", height=450)
     return configure_layout(fig)
 
@@ -133,8 +134,8 @@ def plot_pairplot(df):
         return None
 
     cols = numeric_df.columns[:4].tolist()
-    fig = px.scatter_matrix(numeric_df, dimensions=cols, color_discrete_sequence=["#6366F1"], opacity=0.6)
-    fig.update_traces(diagonal_visible=False)
+    fig = px.scatter_matrix(numeric_df, dimensions=cols, color_discrete_sequence=["#8B5CF6"], opacity=0.6)
+    fig.update_traces(diagonal_visible=True, marker_line_color="white", marker_line_width=1)
     fig.update_layout(title="Multivariate Interaction Matrix", height=600)
     return configure_layout(fig)
 
@@ -149,7 +150,15 @@ def plot_boxplot(df):
 
     fig = go.Figure()
     for col in numeric_df.columns[:8]:
-        fig.add_trace(go.Box(y=numeric_df[col].dropna(), name=col, marker_color="#8B5CF6"))
+        fig.add_trace(go.Box(
+            y=numeric_df[col].dropna(), 
+            name=col, 
+            fillcolor="#8B5CF6",
+            line_color="white",
+            line_width=1,
+            marker_color="#8B5CF6", 
+            marker=dict(line=dict(color="white", width=1))
+        ))
 
     fig.update_layout(title="Outlier Detection & Ranges", showlegend=False, height=450)
     return configure_layout(fig)
@@ -170,7 +179,7 @@ def plot_barplot(df):
 
     for idx, col in enumerate(cols):
         val_counts = df[col].value_counts().nlargest(10)
-        fig.add_trace(go.Bar(x=val_counts.index, y=val_counts.values, marker_color="#3B82F6", name=col), row=1, col=idx+1)
+        fig.add_trace(go.Bar(x=val_counts.index, y=val_counts.values, marker_color="#8B5CF6", name=col, marker_line_color="white", marker_line_width=1), row=1, col=idx+1)
 
     fig.update_layout(title="Highest Frequency Categories", showlegend=False, height=400)
     return configure_layout(fig)
