@@ -1,11 +1,11 @@
 import streamlit as st
 import pandas as pd
 
-# Import logic from other files (to be implemented by teammates)
-from preprocess import preprocess_data
-from eda import plot_histograms
-from model import train_and_select_model
-from insights import generate_insights
+# Import logic from backend package
+from backend.preprocess import preprocess_data
+from backend.eda import plot_histograms
+from backend.model import train_and_select_model
+from backend.insights import generate_insights
 
 st.set_page_config(page_title="Automated Data Analysis Application", layout="wide", page_icon="🚀")
 
