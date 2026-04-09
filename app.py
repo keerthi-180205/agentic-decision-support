@@ -14,36 +14,181 @@ st.set_page_config(page_title="Automated Data Analysis Application", layout="wid
 # Inject Custom CSS for softer typography and button aesthetics
 st.markdown("""
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+    html, body, [data-testid="stAppViewContainer"] {
+        font-family: 'Inter', sans-serif !important;
+    }
+
     /* Sleek container styling */
     [data-testid="stVerticalBlockBorderWrapper"] {
         border-radius: 12px;
         transition: all 0.2s ease-in-out;
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        background: #111827;
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        background: #0f1623;
     }
     [data-testid="stVerticalBlockBorderWrapper"]:hover {
-        border: 1px solid rgba(99, 102, 241, 0.3);
-        box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.2);
+        border: 1px solid rgba(99, 102, 241, 0.35);
+        box-shadow: 0 4px 24px -4px rgba(99, 102, 241, 0.15);
     }
+
     /* Sleek Buttons */
     div.stButton > button:first-child {
-        border-radius: 6px;
+        border-radius: 8px;
         font-weight: 500;
-        letter-spacing: 0.5px;
+        letter-spacing: 0.4px;
         border: 1px solid rgba(99, 102, 241, 0.5);
+        transition: all 0.2s ease;
     }
     div.stButton > button:first-child:hover {
         border: 1px solid rgba(99, 102, 241, 1);
-        box-shadow: 0 4px 12px -2px rgba(99, 102, 241, 0.2);
+        box-shadow: 0 0 16px rgba(99, 102, 241, 0.3);
+        transform: translateY(-1px);
     }
+
     /* Headers typography */
-    h1, h2, h3 {
+    h1, h2, h3, h4 {
         font-weight: 600 !important;
         letter-spacing: -0.5px !important;
     }
-    /* Mute secondary text further */
+
+    /* Mute secondary text */
     p, .stMarkdown p {
         color: #A1A1AA !important;
+    }
+
+    /* ── Model Decision Engine custom card styles ── */
+    .model-engine-card {
+        background: linear-gradient(135deg, #0f1623 0%, #131e2e 100%);
+        border: 1px solid rgba(99, 102, 241, 0.18);
+        border-radius: 14px;
+        padding: 24px 28px;
+        margin-bottom: 0;
+    }
+    .model-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(99, 102, 241, 0.12);
+        border: 1px solid rgba(99, 102, 241, 0.3);
+        color: #818cf8;
+        border-radius: 20px;
+        padding: 3px 12px;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.6px;
+        text-transform: uppercase;
+        margin-bottom: 16px;
+    }
+    .model-name {
+        font-size: 22px;
+        font-weight: 700;
+        color: #f1f5f9;
+        margin: 0 0 4px 0;
+    }
+    .model-task {
+        font-size: 13px;
+        color: #64748b;
+        margin: 0 0 20px 0;
+    }
+    .metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        margin: 20px 0;
+    }
+    .metrics-grid-3 {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin: 20px 0;
+    }
+    .metric-card {
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.07);
+        border-radius: 10px;
+        padding: 16px;
+        text-align: center;
+        transition: border-color 0.2s;
+    }
+    .metric-card:hover {
+        border-color: rgba(99, 102, 241, 0.4);
+    }
+    .metric-label {
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.8px;
+        text-transform: uppercase;
+        color: #64748b;
+        margin-bottom: 8px;
+    }
+    .metric-value {
+        font-size: 28px;
+        font-weight: 700;
+        color: #e2e8f0;
+        line-height: 1;
+    }
+    .metric-value span {
+        font-size: 13px;
+        color: #818cf8;
+        margin-left: 2px;
+    }
+    .divider {
+        height: 1px;
+        background: rgba(255,255,255,0.05);
+        margin: 20px 0;
+    }
+    .section-title {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        color: #475569;
+        margin-bottom: 10px;
+    }
+    .explanation-text {
+        font-size: 13px;
+        color: #94a3b8;
+        line-height: 1.6;
+    }
+    .confidence-bar-wrap {
+        margin-top: 18px;
+    }
+    .confidence-bar-track {
+        background: rgba(255,255,255,0.06);
+        border-radius: 99px;
+        height: 6px;
+        overflow: hidden;
+        margin-top: 8px;
+    }
+    .confidence-bar-fill {
+        height: 100%;
+        border-radius: 99px;
+        transition: width 1s ease;
+    }
+    .confidence-label {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 8px;
+    }
+    .confidence-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        border-radius: 20px;
+        padding: 3px 10px;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.4px;
+    }
+    .pill-high   { background: rgba(34,197,94,0.12);  border: 1px solid rgba(34,197,94,0.35);  color: #4ade80; }
+    .pill-medium { background: rgba(234,179,8,0.12);  border: 1px solid rgba(234,179,8,0.35);  color: #facc15; }
+    .pill-low    { background: rgba(239,68,68,0.12);  border: 1px solid rgba(239,68,68,0.35);  color: #f87171; }
+    .confidence-pct {
+        font-size: 13px;
+        font-weight: 600;
+        color: #94a3b8;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -128,61 +273,68 @@ with left_panel:
         st.markdown("#### AI Model Decision Engine")
         with st.container(border=True):
             result = st.session_state.result
-            
-            # Use metrics from the new pipeline
             pipeline_metrics = result.get("metrics") or result.get("model_metrics", {})
-            
+
             if pipeline_metrics:
                 model_name = result.get("model_name", "Unknown Model")
                 task = result.get("task", "Unknown Task")
 
-                # 🔹 MODEL SUMMARY
-                st.markdown("**Model Summary**")
-                st.write(f"Model: {model_name}")
-                st.write(f"Task: {task.capitalize()}")
-                st.caption("Auto-selected by AI agent")
+                # Model identity row
+                col_name, col_task = st.columns([2, 1])
+                with col_name:
+                    st.markdown(f"### 🤖 {model_name}")
+                    st.caption("Auto-selected by the AI agent based on dataset characteristics")
+                with col_task:
+                    st.metric("Task Type", task.capitalize())
 
-                # 🔹 METRICS DISPLAY
-                st.markdown("**Performance Metrics**")
+                st.divider()
 
+                # Metrics
+                st.markdown("**📊 Performance Metrics**")
                 if task == "classification":
-                    col1, col2, col3, col4 = st.columns(4)
-
-                    col1.metric("Accuracy", f"{pipeline_metrics.get('accuracy', 0):.2f}")
-                    col2.metric("Precision", f"{pipeline_metrics.get('precision', 0):.2f}")
-                    col3.metric("Recall", f"{pipeline_metrics.get('recall', 0):.2f}")
-                    col4.metric("F1 Score", f"{pipeline_metrics.get('f1_score', 0):.2f}")
-
                     score_val = pipeline_metrics.get("accuracy", 0)
-                    st.info("The model demonstrates reliable classification performance with good predictive accuracy.")
-
+                    c1, c2, c3, c4 = st.columns(4)
+                    c1.metric("Accuracy",  f"{pipeline_metrics.get('accuracy', 0):.2f}")
+                    c2.metric("Precision", f"{pipeline_metrics.get('precision', 0):.2f}")
+                    c3.metric("Recall",    f"{pipeline_metrics.get('recall', 0):.2f}")
+                    c4.metric("F1 Score",  f"{pipeline_metrics.get('f1_score', 0):.2f}")
+                    insight = "Reliable classification performance with consistent accuracy across evaluation metrics."
                 else:
-                    col1, col2, col3 = st.columns(3)
-
-                    col1.metric("R2 Score", f"{pipeline_metrics.get('r2_score', 0):.2f}")
-                    col2.metric("MSE", f"{pipeline_metrics.get('mse', 0):,.0f}")
-                    col3.metric("MAE", f"{pipeline_metrics.get('mae', 0):.2f}")
-
                     score_val = pipeline_metrics.get("r2_score", 0)
-                    st.info("The model explains a high proportion of variance, indicating strong predictive performance.")
+                    c1, c2, c3 = st.columns(3)
+                    c1.metric("R² Score", f"{pipeline_metrics.get('r2_score', 0):.2f}")
+                    c2.metric("MSE",      f"{pipeline_metrics.get('mse', 0):,.2f}")
+                    c3.metric("MAE",      f"{pipeline_metrics.get('mae', 0):.2f}")
+                    insight = "Strong regression fit — the model explains a high proportion of variance in the target."
 
-                # 🔹 MODEL DECISION EXPLANATION
-                st.markdown("**Why this model?**")
-                st.write("The system evaluated multiple models and selected the best-performing model based on dataset characteristics and performance.")
+                st.divider()
 
-                # 🔹 CONFIDENCE INDICATOR (🔥 HIGH IMPACT)
-                if score_val >= 0.8:
-                    st.success("High Model Confidence")
-                elif score_val >= 0.6:
-                    st.warning("Moderate Model Confidence")
+                # Insight + Why this model
+                st.markdown("**💡 Model Insight**")
+                st.info(insight)
+
+                st.markdown("**🔍 Why this model?**")
+                st.caption(
+                    f"The AI agent evaluated multiple candidate models and selected **{model_name}** "
+                    f"as the best performer based on cross-validated score, feature distribution, and generalisation."
+                )
+
+                st.divider()
+
+                # Confidence
+                score_pct = min(max(score_val, 0), 1)
+                st.markdown("**📈 Model Confidence**")
+                st.progress(score_pct)
+
+                if score_pct >= 0.8:
+                    st.success(f"✅  High Confidence — {score_pct*100:.1f}%")
+                elif score_pct >= 0.6:
+                    st.warning(f"⚠️  Moderate Confidence — {score_pct*100:.1f}%")
                 else:
-                    st.error("Low Model Confidence")
-
-                # 🔹 VISUAL PROGRESS BAR (NICE TOUCH)
-                st.progress(min(max(score_val, 0), 1))
+                    st.error(f"❌  Low Confidence — {score_pct*100:.1f}%")
 
             else:
-                st.write("No applicable model was trained.")
+                st.info("🤖  No applicable model was trained on this dataset.")
 
 with right_panel:
     if st.session_state.result is not None:
