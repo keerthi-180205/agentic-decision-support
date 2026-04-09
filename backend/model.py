@@ -109,11 +109,61 @@ def run_full_model_pipeline(df):
 
     metrics = evaluate_model(result["task"], result["y_test"], result["y_pred"])
 
+    # Gather all candidate scores for comparison table
+    target_col = df.columns[-1]
+    X = df.drop(columns=[target_col])
+    y = df[target_col]
+    test_sz = 0.2 if len(X) >= 5 else 0.5
+    if len(X) > 1:
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_sz, random_state=42)
+    else:
+        X_train, X_test, y_train, y_test = X, X, y, y
+
+    task = result["task"]
+    if task == "classification":
+        all_models = {
+            "Logistic Regression": LogisticRegression(max_iter=2000, solver='lbfgs'),
+            "Random Forest": RandomForestClassifier(n_estimators=100, random_state=42),
+        }
+    else:
+        all_models = {
+            "Linear Regression": LinearRegression(),
+            "Random Forest": RandomForestRegressor(n_estimators=100, random_state=42),
+        }
+
+    candidate_scores = {}
+    for name, model in all_models.items():
+        try:
+            model.fit(X_train, y_train)
+            candidate_scores[name] = round(float(model.score(X_test, y_test)), 4)
+        except Exception:
+            candidate_scores[name] = None
+
+    # Feature importances (Random Forest only)
+    feature_importances = None
+    best_model = result["best_model"]
+    if hasattr(best_model, "feature_importances_"):
+        fi = best_model.feature_importances_
+        feature_importances = dict(
+            sorted(
+                zip(X.columns.tolist(), fi.tolist()),
+                key=lambda x: x[1],
+                reverse=True
+            )
+        )
+
     return {
         "model_name": result["model_name"],
-        "task": result["task"],
-        "metrics": metrics
+        "task": task,
+        "metrics": metrics,
+        "candidate_scores": candidate_scores,
+        "feature_importances": feature_importances,
+        "train_size": len(X_train),
+        "test_size": len(X_test),
+        "n_features": X.shape[1],
+        "target_col": target_col,
     }
+
 
 # -----------------------------------------------------
 # LEGACY PIPELINE COMPATIBILITY (DO NOT BREAK)

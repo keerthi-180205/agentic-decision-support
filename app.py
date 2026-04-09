@@ -11,6 +11,12 @@ from agent.agent import run_agentic_pipeline
 
 st.set_page_config(page_title="Automated Data Analysis Application", layout="wide", page_icon="📊")
 
+# Import icons from lucide-react style
+try:
+    from streamlit_extras.stylable_container import stylable_container
+except:
+    pass
+
 # Inject Custom CSS for softer typography and button aesthetics
 st.markdown("""
 <style>
@@ -232,18 +238,18 @@ with left_panel:
                     preview_df = st.session_state.df.head(10).copy()
                     for c in preview_df.select_dtypes(include=['object']).columns:
                         preview_df[c] = preview_df[c].astype(str)
-                    st.dataframe(preview_df, hide_index=True, use_container_width=True)
+                    st.dataframe(preview_df, hide_index=True, width='stretch')
                     
                 with data_tabs[1]:
                     clean_preview = st.session_state.result["clean_data"].head(10).copy()
                     for c in clean_preview.select_dtypes(include=['object']).columns:
                         clean_preview[c] = clean_preview[c].astype(str)
-                    st.dataframe(clean_preview, hide_index=True, use_container_width=True)
+                    st.dataframe(clean_preview, hide_index=True, width='stretch')
             else:
                 preview_df = st.session_state.df.head(10).copy()
                 for c in preview_df.select_dtypes(include=['object']).columns:
                     preview_df[c] = preview_df[c].astype(str)
-                st.dataframe(preview_df, hide_index=True, use_container_width=True)
+                st.dataframe(preview_df, hide_index=True, width='stretch')
 
     if st.session_state.result is not None:
         st.markdown("#### Data Insights & Patterns")
@@ -267,77 +273,12 @@ with left_panel:
                     with tab:
                         # Check if it's a natively interactive Plotly chart or legacy Matplotlib
                         if type(fig).__name__ == "Figure" and hasattr(fig, "update_layout"):
-                            st.plotly_chart(fig, use_container_width=True, theme="streamlit")
+                            st.plotly_chart(fig, width='stretch', theme="streamlit")
                         else:
-                            st.pyplot(fig, use_container_width=False)
+                            st.pyplot(fig, width='content')
             else:
                 st.info("No visualizations available.")
 
-        st.markdown("#### AI Model Decision Engine")
-        with st.container(border=True):
-            result = st.session_state.result
-            pipeline_metrics = result.get("metrics") or result.get("model_metrics", {})
-
-            if pipeline_metrics:
-                model_name = result.get("model_name", "Unknown Model")
-                task = result.get("task", "Unknown Task")
-
-                # Model identity row
-                col_name, col_task = st.columns([2, 1])
-                with col_name:
-                    st.markdown(f"### 🤖 {model_name}")
-                    st.caption("Auto-selected by the AI agent based on dataset characteristics")
-                with col_task:
-                    st.metric("Task Type", task.capitalize())
-
-                st.divider()
-
-                # Metrics
-                st.markdown("**📊 Performance Metrics**")
-                if task == "classification":
-                    score_val = pipeline_metrics.get("accuracy", 0)
-                    c1, c2, c3, c4 = st.columns(4)
-                    c1.metric("Accuracy",  f"{pipeline_metrics.get('accuracy', 0):.2f}")
-                    c2.metric("Precision", f"{pipeline_metrics.get('precision', 0):.2f}")
-                    c3.metric("Recall",    f"{pipeline_metrics.get('recall', 0):.2f}")
-                    c4.metric("F1 Score",  f"{pipeline_metrics.get('f1_score', 0):.2f}")
-                    insight = "Reliable classification performance with consistent accuracy across evaluation metrics."
-                else:
-                    score_val = pipeline_metrics.get("r2_score", 0)
-                    c1, c2, c3 = st.columns(3)
-                    c1.metric("R² Score", f"{pipeline_metrics.get('r2_score', 0):.2f}")
-                    c2.metric("MSE",      f"{pipeline_metrics.get('mse', 0):,.2f}")
-                    c3.metric("MAE",      f"{pipeline_metrics.get('mae', 0):.2f}")
-                    insight = "Strong regression fit — the model explains a high proportion of variance in the target."
-
-                st.divider()
-
-                # Insight + Why this model
-                st.markdown("**💡 Model Insight**")
-                st.info(insight)
-
-                st.markdown("**🔍 Why this model?**")
-                st.caption(
-                    f"The AI agent evaluated multiple candidate models and selected **{model_name}** "
-                    f"as the best performer based on cross-validated score, feature distribution, and generalisation."
-                )
-
-                st.divider()
-
-                # Confidence
-                score_pct = min(max(score_val, 0), 1)
-                st.markdown("**📈 Model Confidence**")
-                st.progress(score_pct)
-
-                if score_pct >= 0.8:
-                    st.success(f"✅  High Confidence — {score_pct*100:.1f}%")
-                elif score_pct >= 0.6:
-                    st.warning(f"⚠️  Moderate Confidence — {score_pct*100:.1f}%")
-                else:
-                    st.error(f"❌  Low Confidence — {score_pct*100:.1f}%")
-
-            else:
-                st.info("🤖  No applicable model was trained on this dataset.")
 
 with right_panel:
     if st.session_state.result is not None:
@@ -384,24 +325,211 @@ with right_panel:
             # Trigger rerun to show user message immediately and run the spinner properly
             st.rerun()
 
-# Execute the LLM interaction outside of chat_input's immediate event loop if needed
-# Actually, st.chat_input triggers a rerun, so we intercept the last unanswered query
+# ══════════════════════════════════════════════════════════════════
+# FULL-WIDTH ─ AI Model Decision Engine
+# (Spans exactly the same width as left_panel + right_panel combined)
+# ══════════════════════════════════════════════════════════════════
+if st.session_state.result is not None:
+    st.write("")
+    st.markdown("#### 🤖 AI Model Decision Engine")
+    with st.container(border=True):
+        result = st.session_state.result
+        pipeline_metrics = result.get("metrics") or result.get("model_metrics", {})
+
+        if pipeline_metrics:
+            model_name       = result.get("model_name", "Unknown Model")
+            task             = result.get("task", "Unknown Task")
+            candidate_scores = result.get("candidate_scores", {})
+            feature_importances = result.get("feature_importances")
+            train_size       = result.get("train_size")
+            test_size        = result.get("test_size")
+            n_features       = result.get("n_features")
+            target_col       = result.get("target_col", "target")
+
+            # ── Header ──────────────────────────────────────────────
+            hcol1, hcol2 = st.columns([3, 1])
+            with hcol1:
+                st.markdown(f"### ⚙️ {model_name}")
+                st.caption("Auto-selected by the AI agent based on dataset characteristics")
+            with hcol2:
+                st.metric("Task Type", task.capitalize())
+
+            # ── Dataset pills ────────────────────────────────────────
+            if train_size and test_size:
+                total = train_size + test_size
+                st.markdown(
+                    f"""<div style="display:flex;gap:10px;flex-wrap:wrap;margin:6px 0 14px 0;">
+                        <span style="background:rgba(99,102,241,0.12);border:1px solid rgba(99,102,241,0.35);
+                              color:#818cf8;border-radius:20px;padding:3px 14px;font-size:12px;font-weight:600;">
+                            ▣ {total} rows &nbsp;·&nbsp; {n_features} features
+                        </span>
+                        <span style="background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);
+                              color:#4ade80;border-radius:20px;padding:3px 14px;font-size:12px;font-weight:600;">
+                            ▸ Train {train_size}
+                        </span>
+                        <span style="background:rgba(251,146,60,0.1);border:1px solid rgba(251,146,60,0.3);
+                              color:#fb923c;border-radius:20px;padding:3px 14px;font-size:12px;font-weight:600;">
+                            ▸ Test {test_size}
+                        </span>
+                        <span style="background:rgba(148,163,184,0.1);border:1px solid rgba(148,163,184,0.25);
+                              color:#94a3b8;border-radius:20px;padding:3px 14px;font-size:12px;font-weight:600;">
+                            ◉ Target: {target_col}
+                        </span>
+                    </div>""",
+                    unsafe_allow_html=True,
+                )
+
+            st.divider()
+
+            # ── Performance Metrics ──────────────────────────────────
+            st.markdown("**▣ Performance Metrics**")
+            if task == "classification":
+                score_val = pipeline_metrics.get("accuracy", 0)
+                acc  = pipeline_metrics.get("accuracy",  0)
+                prec = pipeline_metrics.get("precision", 0)
+                rec  = pipeline_metrics.get("recall",    0)
+                f1   = pipeline_metrics.get("f1_score",  0)
+
+                def grade(v):
+                    if v >= 0.9:  return "✓ Excellent"
+                    if v >= 0.75: return "◐ Good"
+                    return "✗ Needs work"
+
+                c1, c2, c3, c4 = st.columns(4)
+                c1.metric("Accuracy",  f"{acc:.2f}",  grade(acc))
+                c2.metric("Precision", f"{prec:.2f}", grade(prec))
+                c3.metric("Recall",    f"{rec:.2f}",  grade(rec))
+                c4.metric("F1 Score",  f"{f1:.2f}",   grade(f1))
+                insight = (
+                    f"The model achieves **{acc*100:.1f}% accuracy** with balanced precision ({prec:.2f}) "
+                    f"and recall ({rec:.2f}), yielding an F1 of {f1:.2f}. "
+                    + ("Performance is strong and reliable." if acc >= 0.8
+                       else "Consider feature engineering or additional data.")
+                )
+            else:
+                score_val = pipeline_metrics.get("r2_score", 0)
+                r2  = pipeline_metrics.get("r2_score", 0)
+                mse = pipeline_metrics.get("mse",      0)
+                mae = pipeline_metrics.get("mae",      0)
+
+                def r2_grade(v):
+                    if v >= 0.85: return "✓ Excellent"
+                    if v >= 0.65: return "◐ Good"
+                    return "✗ Weak fit"
+
+                c1, c2, c3 = st.columns(3)
+                c1.metric("R² Score", f"{r2:.3f}",   r2_grade(r2))
+                c2.metric("MSE",      f"{mse:,.3f}", "Error²")
+                c3.metric("MAE",      f"{mae:.3f}",  "Avg error")
+                insight = (
+                    f"The model explains **{r2*100:.1f}% of variance** in `{target_col}`. "
+                    f"Mean absolute error is {mae:.3f}. "
+                    + ("Excellent fit for production use." if r2 >= 0.85
+                       else "Consider non-linear models or more features.")
+                )
+
+            st.divider()
+
+            # ── Two-column: Competition table | Feature importance ────
+            left_de, right_de = st.columns([1, 1], gap="large")
+
+            with left_de:
+                if candidate_scores:
+                    st.markdown("**▲ Model Competition**")
+                    metric_label = "Accuracy" if task == "classification" else "R² Score"
+                    rows = []
+                    for cname, cscore in candidate_scores.items():
+                        medal    = "●" if cname == model_name else "○"
+                        selected = "✓ Selected" if cname == model_name else ""
+                        score_str = f"{cscore:.4f}" if cscore is not None else "—"
+                        rows.append({"Model": f"{medal} {cname}", metric_label: score_str, "Status": selected})
+                    import pandas as _pd
+                    st.dataframe(_pd.DataFrame(rows), hide_index=True, width="stretch")
+                    st.caption(f"Criterion: highest {metric_label} on 80/20 held-out test set (seed=42)")
+
+                st.write("")
+                st.markdown("**▸ Why this model?**")
+                runner_up = [k for k in candidate_scores if k != model_name]
+                runner_up_text = ""
+                if runner_up:
+                    ru_name  = runner_up[0]
+                    ru_score = candidate_scores.get(ru_name)
+                    bs       = candidate_scores.get(model_name)
+                    if ru_score is not None and bs is not None:
+                        runner_up_text = f" It outperformed <b style='color:#e2e8f0'>{ru_name}</b> by <b style='color:#e2e8f0'>{abs(bs-ru_score):.4f}</b>."
+                st.markdown(
+                    f"""<div style="background:rgba(99,102,241,0.06);border-left:3px solid rgba(99,102,241,0.5);
+                         border-radius:0 8px 8px 0;padding:14px 18px;font-size:13px;color:#94a3b8;line-height:1.8;">
+                        The AI agent compared all candidates on an 80/20 train-test split.
+                        <b style="color:#e2e8f0">{model_name}</b> was chosen as the best generaliser.{runner_up_text}
+                    </div>""",
+                    unsafe_allow_html=True,
+                )
+
+            with right_de:
+                if feature_importances:
+                    st.markdown("**▣ Feature Importance** *(Random Forest)*")
+                    top_n = dict(list(feature_importances.items())[:10])
+                    import plotly.graph_objects as _go
+                    fig_fi = _go.Figure(_go.Bar(
+                        x=list(top_n.values()),
+                        y=list(top_n.keys()),
+                        orientation="h",
+                        marker=dict(color=list(top_n.values()), colorscale="Viridis", showscale=False),
+                        text=[f"{v:.3f}" for v in top_n.values()],
+                        textposition="outside",
+                    ))
+                    fig_fi.update_layout(
+                        height=max(250, len(top_n) * 36),
+                        margin=dict(l=0, r=70, t=10, b=10),
+                        paper_bgcolor="rgba(0,0,0,0)",
+                        plot_bgcolor="rgba(0,0,0,0)",
+                        xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+                        yaxis=dict(autorange="reversed", tickfont=dict(size=12)),
+                        font=dict(color="#94a3b8"),
+                    )
+                    st.plotly_chart(fig_fi, width="stretch")
+                    st.caption(f"Top driver: **{list(top_n.keys())[0]}** ({list(top_n.values())[0]:.3f})")
+                else:
+                    st.markdown("**◆ Model Insight**")
+                    st.info(insight)
+
+            st.divider()
+            if feature_importances:
+                st.markdown("**◆ Model Insight**")
+                st.info(insight)
+
+            score_pct = min(max(score_val, 0), 1)
+            st.markdown("**▲ Model Confidence**")
+            st.progress(score_pct)
+            if score_pct >= 0.8:
+                st.markdown(f"<div style='background:rgba(99,102,241,0.12);border:1px solid rgba(99,102,241,0.35);color:#818cf8;border-radius:8px;padding:12px 16px;font-size:14px;font-weight:600;'>✓  High Confidence — {score_pct*100:.1f}%</div>", unsafe_allow_html=True)
+            elif score_pct >= 0.6:
+                st.warning(f"⚠  Moderate Confidence — {score_pct*100:.1f}%")
+            else:
+                st.error(f"✗  Low Confidence — {score_pct*100:.1f}%")
+        else:
+            st.info("⚙  No applicable model was trained on this dataset.")
+
+# st.chat_input triggers a rerun; intercept last unanswered user message and stream the reply
 if st.session_state.get("chat_history") and st.session_state.chat_history[-1]["role"] == "user":
     user_q = st.session_state.chat_history[-1]["content"]
     with right_panel:
         with st.chat_message("assistant"):
-            with st.spinner("Analyzing data context..."):
-                from utils.llm import get_data_science_response
-                res = st.session_state.result
-                df_shape = str(st.session_state.df.shape)
-                metrics = str(res.get("metrics") or res.get("model_metrics", {}))
-                model_name = res.get("model_name", "Unknown")
-                task = res.get("task", "Unknown")
-                insights = str(res.get("insights", []))
-                
-                ai_response = get_data_science_response(
+            from utils.llm import stream_data_science_response
+            res = st.session_state.result
+            df_shape = str(st.session_state.df.shape)
+            metrics = str(res.get("metrics") or res.get("model_metrics", {}))
+            model_name = res.get("model_name", "Unknown")
+            task = res.get("task", "Unknown")
+            insights = str(res.get("insights", []))
+
+            # Stream tokens live — user sees words appear as they are generated
+            ai_response = st.write_stream(
+                stream_data_science_response(
                     df_shape, model_name, task, metrics, insights, user_q
                 )
-                
-            st.session_state.chat_history.append({"role": "assistant", "content": ai_response})
-            st.rerun()
+            )
+
+        st.session_state.chat_history.append({"role": "assistant", "content": ai_response})
+        st.rerun()
