@@ -10,8 +10,18 @@ def run_agentic_pipeline(df, query=""):
     basic_info = show_basic_info(df)
 
     # 2. preprocess data
-    clean_data = preprocess_data(df)
-
+    import pandas as pd
+    prep_result = preprocess_data(df)
+    
+    prep_summary = {}
+    if isinstance(prep_result, tuple) and len(prep_result) == 5:
+        X_train, X_test, y_train, y_test, prep_summary = prep_result
+        # Recombine train and test into a single unified dataframe for downstream UI & EDA
+        X_clean = pd.concat([X_train, X_test]).sort_index()
+        y_clean = pd.concat([y_train, y_test]).sort_index()
+        clean_data = pd.concat([X_clean, y_clean], axis=1)
+    else:
+        clean_data = prep_result
     # 3. interpret query
     intent = interpret_query(query)
 
@@ -67,6 +77,7 @@ def run_agentic_pipeline(df, query=""):
 
     return {
         "clean_data": clean_data,
+        "preprocessing_summary": prep_summary,
         "basic_info": basic_info,
         "eda_hist": fig_hist,
         "eda_corr": fig_corr,

@@ -357,6 +357,127 @@ with left_panel:
                     preview_df[c] = preview_df[c].astype(str)
                 st.dataframe(preview_df, hide_index=True, width='stretch')
 
+    # ── PREPROCESSING REPORT ────────────────────────────────────────────
+    if st.session_state.result is not None:
+        prep = st.session_state.result.get("preprocessing_summary", {})
+        if prep:
+            st.write("")
+            st.markdown("#### Preprocessing Pipeline Report")
+            with st.container(border=True):
+                # ── Overview row ──
+                num_cols_list  = prep.get("numerical_columns", [])
+                cat_cols_list  = prep.get("categorical_columns", [])
+                scaled_list    = prep.get("scaled_columns", [])
+                ohe_list       = prep.get("onehot_encoded", [])
+                ord_list       = prep.get("ordinal_encoded", [])
+                dropped_list   = prep.get("dropped_columns", [])
+
+                ov1, ov2, ov3, ov4 = st.columns(4)
+                ov1.metric("Numerical Columns", len(num_cols_list))
+                ov2.metric("Categorical Columns", len(cat_cols_list))
+                ov3.metric("Columns Dropped", len(dropped_list))
+                ov4.metric("Transformations Applied",
+                           len([x for x in [scaled_list, ohe_list, ord_list] if x]))
+
+                st.divider()
+
+                # ── Step-by-step explanation cards ──
+                def _badge(color, label):
+                    return (f"<span style='background:{color};border-radius:4px;"
+                            f"padding:2px 8px;font-size:11px;font-weight:700;"
+                            f"color:#fff;margin-right:4px'>{label}</span>")
+
+                # 1. Dropped columns
+                if dropped_list:
+                    st.markdown(
+                        _badge("#ef4444", "STEP 1 — CLEANING") + " **Irrelevant Columns Removed**",
+                        unsafe_allow_html=True)
+                    st.markdown(
+                        f"> The pipeline detected and removed **{len(dropped_list)} column(s)** that "
+                        f"were either index-like identifiers (unique value per row) or unnamed pandas "
+                        f"artefacts. These carry zero predictive value and can cause model overfitting.  \n"
+                        f"> Dropped: `{'`, `'.join(dropped_list)}`"
+                    )
+                else:
+                    st.markdown(
+                        _badge("#22c55e", "STEP 1 — CLEANING") + " **No columns needed to be dropped** — all columns were informative.",
+                        unsafe_allow_html=True)
+
+                st.write("")
+
+                # 2. Missing values
+                st.markdown(
+                    _badge("#f59e0b", "STEP 2 — MISSING VALUES") + " **Imputation Strategy Applied**",
+                    unsafe_allow_html=True)
+                mv_lines = []
+                if num_cols_list:
+                    mv_lines.append(
+                        f"- **Numerical columns** (`{'`, `'.join(num_cols_list)}`) — filled with the **column mean** "
+                        f"so that no rows are discarded and the statistical distribution is preserved.")
+                if cat_cols_list:
+                    mv_lines.append(
+                        f"- **Categorical columns** (`{'`, `'.join(cat_cols_list)}`) — filled with the **most frequent value (mode)** "
+                        f"to maintain the dominant category pattern without introducing noise.")
+                if not mv_lines:
+                    mv_lines.append("- No missing values were detected in this dataset.")
+                st.markdown("\n".join(mv_lines))
+
+                st.write("")
+
+                # 3. Train-Test split
+                st.markdown(
+                    _badge("#6366f1", "STEP 3 — SPLIT") + " **80 / 20 Train-Test Split (before encoding & scaling)**",
+                    unsafe_allow_html=True)
+                st.markdown(
+                    "> The dataset was split into **80% training** and **20% testing** sets "
+                    "**before** any encoding or scaling was applied. This is critical to prevent "
+                    "*data leakage* — all transformers are fitted exclusively on training data "
+                    "and then applied to the test set, ensuring evaluation reflects real-world unseen data."
+                )
+
+                st.write("")
+
+                # 4. Encoding
+                st.markdown(
+                    _badge("#8b5cf6", "STEP 4 — ENCODING") + " **Categorical Column Encoding**",
+                    unsafe_allow_html=True)
+                enc_lines = []
+                if ord_list:
+                    enc_lines.append(
+                        f"- **Ordinal Encoding** applied to: `{'`, `'.join(ord_list)}`  \n"
+                        f"  These columns had a small number of unique values (≤ 5), suggesting a natural or ranked order. "
+                        f"OrdinalEncoder converts them to integer ranks so the model can learn the ordering relationship.")
+                if ohe_list:
+                    enc_lines.append(
+                        f"- **One-Hot Encoding** applied to: `{'`, `'.join(ohe_list)}`  \n"
+                        f"  These columns had more than 5 distinct values with no implied order. "
+                        f"OneHotEncoder creates a separate binary feature for each category, preventing the model "
+                        f"from making false assumptions about magnitude between categories.")
+                if not enc_lines:
+                    enc_lines.append("- No categorical columns required encoding in this dataset.")
+                st.markdown("\n".join(enc_lines))
+
+                st.write("")
+
+                # 5. Scaling
+                st.markdown(
+                    _badge("#06b6d4", "STEP 5 — SCALING") + " **Numerical Column Standardisation**",
+                    unsafe_allow_html=True)
+                if scaled_list:
+                    st.markdown(
+                        f"**StandardScaler** was applied **only** to the numerical columns: "
+                        f"`{'`, `'.join(scaled_list)}`  \n"
+                        f"Scaling was **not** applied to categorical or encoded columns. "
+                        f"StandardScaler transforms each numerical feature to have **mean = 0** and "
+                        f"**standard deviation = 1**. This is essential when numeric features have "
+                        f"very different ranges (e.g. age vs. salary) which would otherwise bias "
+                        f"distance-based models like Logistic Regression.  \n"
+                        f"The scaler was **fitted only on training data** and then applied to both "
+                        f"train and test sets to prevent data leakage."
+                    )
+                else:
+                    st.markdown("- No numerical columns were found that required scaling.")
+
     if st.session_state.result is not None:
         st.markdown("#### Data Insights & Patterns")
         with st.container(border=True):

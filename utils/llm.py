@@ -1,6 +1,6 @@
 import ollama
 
-MODEL = "qwen3:0.6b"
+MODEL = "llama3.2"
 
 def ask_llm(prompt: str) -> str:
     """

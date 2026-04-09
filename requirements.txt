@@ -6,7 +6,9 @@ scikit-learn==1.8.0     # ML models: LogisticRegression, RandomForest, etc. (mod
 # ── Visualization ────────────────────────────────────────────
 matplotlib==3.10.8      # Plotting charts and graphs (eda.py)
 seaborn==0.13.2         # Statistical visualizations (eda.py)
+plotly                  # Interactive visualizations (eda.py)
 
-# ── Web App ──────────────────────────────────────────────────
+# ── Web App & LLM ────────────────────────────────────────────
 streamlit==1.54.0       # Interactive UI for the app (app.py)
 openpyxl                # Excel file support (app.py)
+ollama                  # Local LLM integration (utils/llm.py)
