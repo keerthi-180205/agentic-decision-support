@@ -78,19 +78,25 @@ Ollama → chatbot-based interaction
 - Interactive chatbot-based insights using Ollama  
 
 ### 1. Dataset Upload & Preview
-![Dataset Upload](assets/ui.png)
+![Dataset Upload](assets/ui.png)<img width="1196" height="830" alt="Screenshot 2026-04-11 201030" src="https://github.com/user-attachments/assets/bcc4200c-4023-444c-991a-3d981cdfb034" />
+<img width="1215" height="826" alt="Screenshot 2026-04-11 200940" src="https://github.com/user-attachments/assets/262b0fa4-122c-4d49-985c-c7a15d6012a9" />
+
 
 ### 2. Data Processing Pipeline
-![Processing](assets/processing.png)
+![Processing](assets/processing.png)![Uploading Screenshot 2026-04-11 201030.png…]()
+
 
 ### 3. Data Visualization
-![Visualization](assets/graph.png)
+![Visualization](assets/graph.png)<img width="1236" height="717" alt="Screenshot 2026-04-11 201044" src="https://github.com/user-attachments/assets/e75c0d8c-af2d-4e39-b6d0-361fc9fb209a" />
+
 
 ### 4. Model Performance
-![Model Output](assets/model.png)
+![Model Output](assets/model.png)<img width="1802" height="671" alt="Screenshot 2026-04-11 201149" src="https://github.com/user-attachments/assets/47550608-90a5-408b-a4ad-6d31a543d057" />
+
 
 ### 5. AI Chatbot Interaction
-![Chatbot](assets/chat.png)
+![Chatbot](assets/chat.png)<img width="622" height="552" alt="Screenshot 2026-04-11 201612" src="https://github.com/user-attachments/assets/5e025d66-e962-49b6-985d-6e66ec9b6fe2" />
+
 
 ---
 
