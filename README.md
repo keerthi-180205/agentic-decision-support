@@ -1,53 +1,94 @@
-# 🤖 Agentic Decision Support System
+# Autonomous Data Analytics System
 
-A hackathon project that uses machine learning to automatically analyze datasets, train the best-fit model, and generate human-readable insights to support smarter decision-making.
+An AI-driven system that automatically analyzes datasets, selects the most suitable machine learning model, and generates actionable insights without manual intervention.
 
----
-
-## 📌 Project Overview
-
-This system takes any structured CSV dataset as input and:
-- Automatically detects whether the problem is **classification** or **regression**
-- Trains and compares multiple ML models to find the **best performer**
-- Generates **actionable insights** based on feature importance and correlations
-- Displays results through an **interactive web UI**
+Developed during a hackathon as a collaborative project.
 
 ---
 
-## 👥 Team Structure (4 Members)
+## Problem Statement
 
-| File | Role | Responsibility |
-|---|---|---|
-| `preprocess.py` | Data Engineer | Data cleaning, encoding, train/test split |
-| `eda.py` | Data Analyst | Exploratory analysis & visualizations |
-| `model.py` + `insights.py` | ML Engineer | Model training, selection & insight generation |
-| `app.py` | Frontend/UI | Streamlit interface that ties everything together |
+Data analysis and model selection require significant manual effort and expertise. Beginners often struggle to preprocess data, choose the right model, and interpret results effectively.
 
 ---
 
-## 📁 Project Structure
+## System Capabilities
 
-```
-agentic-decision-support/
-├── app.py              # Streamlit web application (UI entry point)
-├── model.py            # ML model training & selection
-├── insights.py         # Feature importance & insight generation
-├── preprocess.py       # Data preprocessing & cleaning
-├── eda.py              # Exploratory data analysis
-├── utils.py            # Shared helper functions
-├── data/
-│   └── sample.csv      # Sample dataset
-└── requirements.txt    # Project dependencies
-```
+- Automatically detects dataset type (classification or regression)  
+- Selects the most suitable machine learning model  
+- Trains and evaluates multiple models  
+- Generates performance metrics  
+- Produces human-readable insights  
+- Provides an interactive web interface for user interaction  
+- Integrates chatbot-based interaction using Ollama  
 
 ---
 
-## ⚙️ Setup & Installation
+## My Contributions
 
+- Implemented automated model selection logic (classification vs regression)  
+- Built model training and evaluation pipeline using Scikit-learn  
+- Developed insight generation module using feature importance and correlations  
+- Integrated Ollama-based chatbot for interactive insights  
+- Contributed to backend integration with Streamlit interface  
+
+---
+
+## Team Contributions
+
+- **Keerthi N (ML Engineer):** Designed and implemented automated model selection pipeline, training workflow, insight generation, and integrated Ollama-based chatbot for interactive insights  
+- **Nithish S Gowda (Data Engineer):** Handled data preprocessing, cleaning, and feature engineering  
+- **Chinmay CP (Data Analyst):** Performed exploratory data analysis and visualization  
+- **Tejas Gupta (Frontend Developer):** Built Streamlit interface and integrated backend components  
+
+---
+
+## Tech Stack
+
+- Language: Python  
+- Libraries: Pandas, NumPy, Scikit-learn  
+- Visualization: Matplotlib, Seaborn  
+- Interface: Streamlit  
+- LLM Integration: Ollama  
+
+---
+
+## System Architecture
+
+CSV Data
+↓
+preprocess.py → cleaned X, y
+↓
+model.py → best_model, score
+↓
+insights.py → generated insights
+↓
+app.py → Streamlit UI
+↓
+Ollama → chatbot-based interaction
+
+---
+
+## Output
+
+- Automatically selected best model for given dataset  
+- Model performance metrics (accuracy / regression score)  
+- Generated insights highlighting key influencing features  
+- Interactive chatbot-based insights using Ollama  
+
+### UI Preview
+![UI Screenshot](your-image-link)
+
+### Sample Output
+![Output Screenshot](your-image-link)
+
+---
+
+## Setup & Installation
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/your-username/agentic-decision-support.git
-cd agentic-decision-support
+git clone https://github.com/your-username/autonomous-data-analytics-system.git
+cd autonomous-data-analytics-system
 ```
 
 ### 2. Install dependencies
@@ -55,73 +96,46 @@ cd agentic-decision-support
 pip install -r requirements.txt
 ```
 
-### 3. Run the app
+### 3. Run the application
 ```bash
 streamlit run app.py
 ```
+---
+
+## Model Selection & Training Pipeline
+
+### detect_problem_type(y)
+Determines whether the task is classification or regression based on the target variable.
+
+### train_and_select_model(X, y)
+- Trains multiple models:
+  - Classification: Logistic Regression, Random Forest Classifier  
+  - Regression: Linear Regression, Random Forest Regressor  
+- Selects the best model based on performance score  
+
+### evaluate_model(model, X_test, y_test)
+- Evaluates the selected model on test data  
+- Returns performance score  
 
 ---
 
-## 🧠 ML Module — `model.py`
+## Insight Generation Module
 
-### `detect_problem_type(y)`
-Automatically determines if the task is classification or regression.
-- `< 10 unique values` or `object dtype` → **Classification**
-- `≥ 10 unique values` → **Regression**
+### generate_insights(df, model)
 
-### `train_and_select_model(X, y)`
-Trains multiple models and returns the best one.
-- **Classification:** `LogisticRegression`, `RandomForestClassifier`
-- **Regression:** `LinearRegression`, `RandomForestRegressor`
-- Returns: `(best_model, best_score)`
-
-### `evaluate_model(model, X_test, y_test)`
-Scores the model on test data.
-- Returns: `float` score
+- Uses feature importance for tree-based models  
+- Uses correlation analysis for linear models  
+- Identifies top influential features  
+- Generates human-readable insights  
+- Provides decision-support suggestions  
 
 ---
 
-## 💡 Insights Module — `insights.py`
+## Dependencies
 
-### `generate_insights(df, model)`
-Generates human-readable insights from the trained model.
-- Uses **feature importance** for tree-based models (RandomForest)
-- Falls back to **correlation** for linear models
-- Shows **top 3 most influential features** only (UI-friendly)
-- Appends 2 decision suggestions
-- Returns: `list` of insight strings
+Core libraries used in the project:
 
----
-
-## 🔗 How Modules Connect
-
-```
-CSV Data
-   ↓
-preprocess.py  →  cleaned X, y
-   ↓
-model.py       →  best_model, score
-   ↓
-insights.py    →  list of insights
-   ↓
-app.py         →  displays everything in UI
-```
-
----
-
-## 📦 Dependencies
-
-| Package | Version | Used In |
-|---|---|---|
-| pandas | 2.3.3 | preprocess, eda, insights |
-| numpy | 2.4.2 | insights |
-| scikit-learn | 1.8.0 | model |
-| matplotlib | 3.10.8 | eda |
-| seaborn | 0.13.2 | eda |
-| streamlit | 1.54.0 | app |
-
----
-
-## 📄 License
-
-This project was built as part of a hackathon. Open for educational use.
+- pandas, numpy → data processing  
+- scikit-learn → model training  
+- matplotlib, seaborn → visualization  
+- streamlit → web interface   
