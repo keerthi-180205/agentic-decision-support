@@ -78,12 +78,11 @@ Ollama → chatbot-based interaction
 - Interactive chatbot-based insights using Ollama  
 
 ### 1. Dataset Upload & Preview
-![Dataset Upload](assets/ui.png)<img width="1196" height="830" alt="Screenshot 2026-04-11 201030" src="https://github.com/user-attachments/assets/bcc4200c-4023-444c-991a-3d981cdfb034" />
-<img width="1215" height="826" alt="Screenshot 2026-04-11 200940" src="https://github.com/user-attachments/assets/262b0fa4-122c-4d49-985c-c7a15d6012a9" />
+![Dataset Upload](assets/ui.png)<img width="1215" height="826" alt="Screenshot 2026-04-11 200940" src="https://github.com/user-attachments/assets/262b0fa4-122c-4d49-985c-c7a15d6012a9" />
 
 
 ### 2. Data Processing Pipeline
-![Processing](assets/processing.png)![Uploading Screenshot 2026-04-11 201030.png…]()
+![Processing](assets/processing.png)<img width="1196" height="830" alt="Screenshot 2026-04-11 201030" src="https://github.com/user-attachments/assets/bcc4200c-4023-444c-991a-3d981cdfb034" />
 
 
 ### 3. Data Visualization
