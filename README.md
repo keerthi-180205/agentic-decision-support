@@ -77,11 +77,20 @@ Ollama → chatbot-based interaction
 - Generated insights highlighting key influencing features  
 - Interactive chatbot-based insights using Ollama  
 
-### UI Preview
-![UI Screenshot](your-image-link)
+### 1. Dataset Upload & Preview
+![Dataset Upload](assets/ui.png)
 
-### Sample Output
-![Output Screenshot](your-image-link)
+### 2. Data Processing Pipeline
+![Processing](assets/processing.png)
+
+### 3. Data Visualization
+![Visualization](assets/graph.png)
+
+### 4. Model Performance
+![Model Output](assets/model.png)
+
+### 5. AI Chatbot Interaction
+![Chatbot](assets/chat.png)
 
 ---
 
