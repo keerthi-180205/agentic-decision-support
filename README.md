@@ -54,7 +54,7 @@ Data analysis and model selection require significant manual effort and expertis
 ---
 
 ## System Architecture
-
+```
 CSV Data
 ↓
 preprocess.py → cleaned X, y
@@ -67,6 +67,7 @@ app.py → Streamlit UI
 ↓
 Ollama → chatbot-based interaction
 
+```
 ---
 
 ## Output
