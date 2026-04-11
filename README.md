@@ -102,7 +102,7 @@ Ollama → chatbot-based interaction
 ## Setup & Installation
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/your-username/autonomous-data-analytics-system.git
+git clone https://github.com/keerthi-180205/autonomous-data-analytics-system.git
 cd autonomous-data-analytics-system
 ```
 
